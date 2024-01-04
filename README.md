@@ -1,4 +1,4 @@
-Đây là một mẫu tệp README để cung cấp thông tin về cài đặt, cấu hình, và hướng dẫn cho mã nguồn của bạn:
+Đây là một mẫu tệp README để cung cấp thông tin về cài đặt, cấu hình, và hướng dẫn cho mã nguồn:
 
 # Cánh Tay Robot Simulation
 
