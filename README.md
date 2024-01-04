@@ -35,7 +35,7 @@
 
 Chạy ứng dụng bằng cách chạy tệp `main.py`:
 
-```bash
+```
 python main.py
 ```
 
