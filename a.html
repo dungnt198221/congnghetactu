@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="a.css">
+    <script src="test.js"></script>
+</head>
+
+<body>
+    <div class="group"></div>
+    <div class="rbg">
+        <div class="rb" id="robot1">
+            <div class="w" id="rbw1"></div>
+        </div>
+        <div class="rb" id="robot2">
+            <div class="w" id="rbw2"></div>
+        </div>
+        <div class="rb" id="robot3">
+            <div class="w" id="rbw3"></div>
+        </div>
+        <div class="rb" id="robot4">
+            <div class="w" id="rbw4"></div>
+        </div>
+    </div>
+
+
+
+    <script>
+        function CreatedBox(name, color) {
+            var box = document.createElement("div");
+            box.className = "box";
+            box.id = name;
+            box.style.backgroundColor = color;
+            box.style.position = "absolute";
+            box.style.zIndex = box.zIndex - 1;
+            var a = document.createElement("a");
+            a.innerHTML = name;
+            box.appendChild(a);
+            document.getElementsByClassName("group")[0].appendChild(box);
+        }
+
+        var isMoving = false;
+
+        function MoveBox(name, time, robot) {
+            isMoving = true;
+
+            var box = document.getElementById(name);
+            if (box && robot) {
+                var initialLeft = box.offsetLeft;
+                var initialTop = box.offsetTop;
+                var top = robot.offsetTop;
+                var left = robot.offsetLeft;
+                var finalLeft = left;
+                var finalTop = top;
+
+                var leftIncrement = (finalLeft - initialLeft) / time;
+                var topIncrement = (finalTop - initialTop) / time;
+
+                var currentTime = 0;
+
+                function move() {
+                    if (isMoving && currentTime <= time) {
+                        box.style.left = initialLeft + leftIncrement * currentTime + "px";
+                        box.style.top = initialTop + topIncrement * currentTime + "px";
+                        currentTime++;
+
+                        // Kiểm tra giá trị của isMoving trước khi thực hiện bước di chuyển tiếp theo
+                        if (isMoving) {
+                            setTimeout(move, time * 100);
+                        }
+                    } else {
+                        isMoving = false; // Hàm MoveBox đã kết thúc
+                    }
+                }
+                move();
+            } else {
+                console.log("Không tìm thấy hộp hoặc robot");
+                isMoving = false; // Trường hợp không tìm thấy hộp, đảm bảo biến isMoving được đặt lại
+            }
+        }
+
+        function DropBox(name) {
+            var box = document.getElementById(name);
+            if (box) {
+                isMoving = false;
+                // Thực hiện các hành động liên quan đến DropBox, không làm ảnh hưởng đến MoveBox
+            } else {
+                console.log("Không tìm thấy hộp");
+            }
+        }
+
+        function releaseLock() {
+            lock.locked = false;
+            const next = lock.queue.shift();
+            if (next) {
+                next();
+            }
+        }
+
+        const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
+        const lock = { locked: false, queue: [] };
+
+        function acquireLock() {
+            return new Promise(resolve => {
+                const attemptLock = () => {
+                    if (!lock.locked) {
+                        lock.locked = true;
+                        resolve();
+                    } else {
+                        lock.queue.push(attemptLock);
+                    }
+                };
+
+                attemptLock();
+            });
+        }
+
+        function transportBox(robot, box, boxColor, boxQueue) {
+            return async () => {
+                await acquireLock();
+                try {
+                    robot.box = box;
+                    const current_time = new Date().toLocaleTimeString();
+                    console.log(`${current_time}: ${robot.name} is transporting a ${box.color}  ${box.name}`, boxColor);
+                    const transportTime = box.color === 'red' ? 5 : 3;
+
+                    MoveBox(box.name, transportTime, document.getElementById(robot.name.toLowerCase()));
+
+                    for (let i = 0; i < transportTime; i++) {
+                        if (robot.box.color !== 'red' && boxQueue.length > 0 && boxQueue[0].color === 'red') {
+                            const drop_time = new Date().toLocaleTimeString();
+                            console.log(`${drop_time}: ${robot.name} is dropping a ${robot.box.color}  ${robot.box.name} to transport a red  ${robot.box.name}`, boxColor);
+                            DropBox(robot.box.name.toLowerCase());
+                            robot.box = boxQueue.shift();
+                            console.log(`${current_time}: ${robot.name} is transporting a ${robot.box.color}  ${robot.box.name}`, boxColor);
+                            MoveBox(robot.box.name, transportTime, document.getElementById(robot.name.toLowerCase()));
+                        }
+                        await sleep(1000);
+                    }
+
+                    const complete_time = new Date().toLocaleTimeString();
+                    console.log(`${complete_time}: ${robot.name} has transported a ${robot.box.color}  ${robot.box.name}`, boxColor);
+                    robot.box = null;
+                    await sleep(1000);
+                } finally {
+                    releaseLock();
+                }
+
+                if (robot.nextRobot) {
+                    setTimeout(transportBox(robot.nextRobot, box, boxColor, boxQueue));
+                }
+            };
+        }
+
+        function boxGenerator(robot, boxQueue) {
+            return async () => {
+                let boxCount = 0;
+                while (true) {
+                    const color = ['red', 'blue', 'green'][Math.floor(Math.random() * 3)];
+                    const box = { color, name: `box${boxCount + 1}`, count: boxCount };
+                    const current_time = new Date().toLocaleTimeString();
+                    const boxColor = colorMapping[box.color];
+                    console.log(`${current_time}: A ${color} ${box.name} appears`, boxColor);
+                    CreatedBox(box.name, color);
+                    boxQueue.push(box);
+                    boxCount++;
+
+                    if (!robot.box || (robot.box.color !== 'red' && color === 'red')) {
+                        setTimeout(transportBox(robot, boxQueue.shift(), boxColor, boxQueue));
+                    }
+                    await sleep(3000);
+                }
+            };
+        }
+
+        function startTransportation() {
+            const boxQueue = [];
+            setTimeout(boxGenerator(robots[0], boxQueue));
+        }
+
+        const colorMapping = { 'red': 'red', 'blue': 'blue', 'green': 'green' };
+
+        const robots = Array.from({ length: 4 }, (_, i) => ({ name: `Robot${i + 1}`, box: null, nextRobot: null }));
+        for (let i = 0; i < 3; i++) {
+            robots[i].nextRobot = robots[i + 1];
+        }
+
+        window.onload = function () {
+            startTransportation();
+        };
+
+        document.getElementById("bt").onclick = function () {
+            CreatedBox("box1", "red");
+        };
+
+        document.getElementById("mv").onclick = function () {
+            MoveBox("box1", 10, document.getElementById("robot1"));
+        };
+
+        document.getElementById("dp").onclick = function () {
+            DropBox("box1");
+        };
+    </script>
+</body>
+
+</html>
