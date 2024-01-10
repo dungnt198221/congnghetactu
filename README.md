@@ -4,12 +4,10 @@
 
 ## Mô Tả
 
-Đây là một mô phỏng đơn giản về quá trình vận chuyển hộp màu sắc qua các cánh tay robot bằng thư viện tkinter. Mỗi robot có nhiệm vụ vận chuyển hộp và có thể đặt hộp hiện tại để vận chuyển một hộp đặc biệt màu đỏ. Mô phỏng được thực hiện bằng cách sử dụng luồng để mô phỏng các tác vụ đồng thời.
+Đây là một mô phỏng đơn giản về quá trình vận chuyển hộp màu sắc qua các cánh tay robot . Mỗi robot có nhiệm vụ vận chuyển hộp và có thể đặt hộp hiện tại để vận chuyển một hộp đặc biệt màu đỏ. Mô phỏng được thực hiện bằng cách sử dụng luồng để mô phỏng các tác vụ đồng thời.
 
 ## Yêu Cầu
 
-- Python 3.x
-- Thư viện tkinter
 
 ## Cài Đặt
 
