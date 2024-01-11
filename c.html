@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        body {
+            background: #eee;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 90vh;
+        }
+
+        .group {
+            width: 300px;
+            height: 300px;
+            background: #fff;
+            border-radius: 5px;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            flex-wrap: wrap;
+        }
+
+        .box {
+            width: 100px;
+            height: 100px;
+            z-index: 999;
+            justify-content: center;
+            align-items: center;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+
+            color: black;
+            font-size: 30px;
+            font-weight: 500;
+            box-shadow: 0 0 10px rgba(8, 241, 171, 0.9);
+
+        }
+
+        .rbg {
+            margin: 10px;
+            width: 900px;
+            height: 300px;
+            background: #fff;
+            display: flex;
+            justify-content: space-evenly;
+            align-items: center;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
+        }
+
+        .rb {
+            margin: 10px;
+            width: 50px;
+            height: 50px;
+            /* background: black; */
+            border: 2px solid black;
+            box-shadow: 0 0 10px rgba(208, 38, 38, .9);
+        }
+
+        /* .w{
+            background: white;
+            width: 60px;
+            height: 60px;
+            position: relative;
+            top:100px;
+            box-shadow:0 0 10px rgba(208, 38, 38, .9);
+        } */
+    </style>
+
+</head>
+
+<body>
+    <div class="group" id="robot0"></div>
+    <div class="rbg">
+        <div class="rb" id="robot1">
+
+        </div>
+        <div class="rb" id="robot2">
+            < </div>
+                <div class="rb" id="robot3">
+
+                </div>
+                <div class="rb" id="robot4">
+
+                </div>
+        </div>
+
+        <script>
+            class Box {
+                constructor(id, color) {
+                    this.id = id;
+                    this.color = color;
+                    this.offsetLeft = null;
+                    this.offsetTop = null;
+                }
+
+                remove() {
+                    var box = document.getElementById(this.id);
+                    if (box) {
+                        box.remove();
+                    }
+                }
+
+                CreatedBox() {
+                    var box = document.createElement("div");
+                    box.className = "box";
+                    box.id = this.id;
+                    box.style.backgroundColor = this.color;
+                    box.style.position = "absolute";
+
+                    var a = document.createElement("a");
+                    a.innerHTML = this.id;
+                    box.appendChild(a);
+                    document.getElementsByClassName("group")[0].appendChild(box);
+                }
+
+                getOffsetLeft() {
+                    return document.getElementById(this.id).offsetLeft;
+                }
+
+                getOffsetTop() {
+                    return document.getElementById(this.id).offsetTop;
+                }
+
+                setOffsetLeft(left) {
+                    document.getElementById(this.id).style.left = left + "px";
+                    this.offsetLeft = left;
+                }
+
+                setOffsetTop(top) {
+                    document.getElementById(this.id).style.top = top + "px";
+                    this.offsetTop = top;
+                }
+            }
+
+            const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms * 1000));
+
+            class Robot {
+                constructor(id) {
+                    this.id = id;// id của robot
+                    this.isMovingBox = false; // đang di chuyển box
+                    this.watingBox = []; // mảng chứa các box đang chờ
+                    this.boxMove = null;// box đang di chuyển
+                    this.offsetLeft = document.getElementById(id).offsetLeft; // vị trí ban đầu của robot
+                    this.offsetTop = document.getElementById(id).offsetTop;// vị trí ban đầu của robot
+                }
+
+                async RandomBox() {// tạo box ngẫu nhiên
+                    let boxCount = 0;
+                    while (boxCount < 100) {
+                        const colors = ['red', 'green', 'blue', 'yellow'];// mảng chứa các màu
+                        const randomIndex = Math.floor(Math.random() * colors.length);
+                        const selectedColor = colors[randomIndex]; // chọn ngẫu nhiên màu
+                        const box = new Box(`box${boxCount + 1}`, selectedColor); // tạo box
+                        box.CreatedBox(); // tạo element box
+                        box.setOffsetLeft(document.getElementById(box.id).offsetLeft); // lấy vị trí của box
+                        box.setOffsetTop(document.getElementById(box.id).offsetTop); // lấy vị trí của box
+                        this.watingBox.push(box); // thêm box vào mảng watingBox của robot gọi đến
+                        boxCount++;
+
+                        await sleep(2);
+                    }
+                }
+
+                CheckWatingBox(robot) { // kiểm tra mảng watingBox của robot gọi đến
+                    return robot.watingBox.length > 0; // nếu mảng watingBox có phần tử thì trả về true
+                }
+
+                RemoveBox(anyBox) { // xóa box
+                    var box = document.getElementById(anyBox?.id);
+                    if (box) {
+                        box.style.zIndex = -999; // đưa box xuống dưới coi như là đã xóa
+                    }
+                }
+
+                async MoveBox(box, time) { // di chuyển box
+                    this.isMovingBox = true; // set biến isMovingBox = true
+                    this.boxMove = box; // set boxMove = box
+                    return new Promise(resolve => {
+                        if (box && this.isMovingBox) {
+                            var initialLeft = box.getOffsetLeft(); // lấy vị trí ban đầu của box
+                            var initialTop = box.getOffsetTop(); // lấy vị trí ban đầu của box
+                            var top = this.offsetTop; // lấy vị trí ban đầu của robot
+                            var left = this.offsetLeft;// lấy vị trí ban đầu của robot
+                            var finalLeft = left;
+                            var finalTop = top;
+
+                            var leftIncrement = (finalLeft - initialLeft) / (time); // tính toán vận tốc di chuyển
+                            var topIncrement = (finalTop - initialTop) / (time); // tính toán vận tốc di chuyển
+
+                            var currentTime = 0;
+
+                            const move = () => { // hàm di chuyển
+                                if (this.isMovingBox && currentTime <= time) {
+                                    box.setOffsetLeft(initialLeft + leftIncrement * currentTime); // set vị trí của box sau mỗi 1s 
+                                    box.setOffsetTop(initialTop + topIncrement * currentTime); // set vị trí của box sau mỗi 1s
+                                    currentTime += 1;
+
+                                    if (this.isMovingBox) { // kiểm tra biến isMovingBox
+                                        setTimeout(move, time * 1000); // nếu biến isMovingBox = true thì tiếp tục di chuyển
+                                    }
+                                } else {
+                                    this.isMovingBox = false; // nếu biến isMovingBox = false thì dừng di chuyển
+                                    resolve(); // trả về promise
+                                }
+                            };
+
+                            move(); // gọi hàm di chuyển
+                        }
+                    });
+                }
+
+
+                DropBox() {
+                    this.isMovingBox = false;
+                    this.boxMove = null;
+
+                }
+            }
+
+            async function simulateRobotActions(robot, prevRobot) { // hàm mô phỏng hành động của robot
+                if (robot.CheckWatingBox(prevRobot) && !robot.isMovingBox) { // kiểm tra mảng watingBox của robot gọi đến và biến isMovingBox
+                    var redbox = prevRobot.watingBox.find(box => box?.color === 'red'); // tìm box có màu đỏ
+                    if (redbox) {
+                        prevRobot.watingBox = prevRobot.watingBox.filter(x => x.id !== redbox.id); // xóa box có màu đỏ khỏi mảng watingBox
+
+                        await robot.MoveBox(redbox, 1); // di chuyển box có màu đỏ
+                        robot.watingBox.push(redbox); // thêm box có màu đỏ vào mảng watingBox của robot gọi đến
+                    } else {
+
+                        if (prevRobot.watingBox.length > 0) { // kiểm tra mảng watingBox của robot gọi đến
+                            var bm = prevRobot.watingBox[0]; // lấy box đầu tiên trong mảng watingBox
+                            prevRobot.watingBox.shift(); // xóa box đầu tiên trong mảng watingBox
+                            await robot.MoveBox(bm, 4); // di chuyển box
+                            robot.watingBox.push(bm); // thêm box vào mảng watingBox của robot gọi đến
+                        }
+                    }
+                }
+                if (robot.isMovingBox) { // kiểm tra biến isMovingBox
+                    var redbox = prevRobot.watingBox.find(box => box?.color === 'red'); // tìm box có màu đỏ
+                    if (redbox && robot.boxMove !== redbox) { // kiểm tra box có màu đỏ và box đang di chuyển khác box có màu đỏ
+                        prevRobot.watingBox.push(robot.boxMove); // thêm box đang di chuyển vào mảng watingBox của robot trước đó gọi đến
+                        prevRobot.watingBox = prevRobot.watingBox.filter(x => x.id !== redbox.id); // xóa box có màu đỏ khỏi mảng watingBox
+                        await robot.MoveBox(redbox, 1); // di chuyển box có màu đỏ
+                        robot.watingBox.push(redbox); // thêm box có màu đỏ vào mảng watingBox của robot gọi đến
+
+                    }
+                }
+                if (robot.id === 'robot4') { // kiểm tra robot có id = robot4
+                    robot4.watingBox.map(x => { // duyệt mảng watingBox của robot4
+
+                        robot.RemoveBox(x)  // xóa box
+                    })
+                }
+                // Log thông tin mảng watingBox
+
+                // Continue the simulation after a delay
+                setTimeout(async () => { // gọi lại hàm simulateRobotActions
+                    await simulateRobotActions(robot, prevRobot); // gọi lại hàm simulateRobotActions
+                    console.log(`${robot.id}: ${JSON.stringify(robot.watingBox.map(x => x.id))}`); // log thông tin mảng watingBox
+                    console.log("robot0: " + JSON.stringify(robot0.watingBox.map(x => x.id))); // log thông tin mảng watingBox
+                    console.log("");
+                }, 4000);
+            }
+
+
+            // Create robots
+            const robot1 = new Robot("robot1");
+            const robot2 = new Robot("robot2");
+            const robot3 = new Robot("robot3");
+            const robot4 = new Robot("robot4");
+            const robot0 = new Robot("robot0");
+            // Start the simulation
+            window.onload = async () => {
+
+                robot0.RandomBox();
+                await simulateRobotActions(robot1, robot0);
+                await simulateRobotActions(robot2, robot1);
+                await simulateRobotActions(robot3, robot2);
+                await simulateRobotActions(robot4, robot3);
+            };
+        </script>
+</body>
+
+</html>
