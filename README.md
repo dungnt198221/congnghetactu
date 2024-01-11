@@ -17,6 +17,6 @@
     git clone https://github.com/dungnt198221/congnghetactu
     ```
 
-    chạy live sever ở file a.html
+    chạy live sever ở file c.html
    ![image](https://github.com/dungnt198221/congnghetactu/assets/118751230/978211c0-b466-4df8-950f-fee8c41ba92f)
 
